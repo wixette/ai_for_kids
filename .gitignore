@@ -1,3 +1,25 @@
+#----------
+# OS
+#----------
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+#----------
+# Blender
+#----------
+
+*.blend1
+
+#----------
+# JS
+#----------
+
 # Logs
 logs
 *.log
@@ -102,3 +124,4 @@ dist
 
 # TernJS port file
 .tern-port
+
