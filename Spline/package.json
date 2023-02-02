@@ -1,0 +1,19 @@
+{
+  "name": "spline",
+  "version": "0.0.1",
+  "description": "Creates curved path based on sample points.",
+  "main": "spline.js",
+  "repository": "https://github.com/wixette/ai_for_kids",
+  "author": "wixette",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "http-server -c-1 ."
+  },
+  "dependencies": {
+    "three": "^0.149.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
