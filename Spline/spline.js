@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {TrackballControls} from 'three/examples/jsm/controls/TrackballControls.js';
 import {Smooth} from './smooth.js';
+import {TWEEN} from 'three/examples/jsm/libs/tween.module.min';
 
 class App {
   constructor(canvasElem) {
@@ -26,16 +26,12 @@ class App {
     this.camera = new THREE.PerspectiveCamera(30,
       this.canvasElem.width / this.canvasElem.height,
       0.1, 1000);
+    this.resetCamera();
+  }
+
+  resetCamera() {
     this.camera.position.set(0, 0, 240);
     this.camera.lookAt(0, 0, 0);
-    this.controls = new TrackballControls(this.camera,
-        this.renderer.domElement);
-    this.controls.mouseButtons = {
-      LEFT: THREE.MOUSE.DOLLY,
-      MIDDLE: THREE.MOUSE.ROTATE,
-      RIGHT: THREE.MOUSE.PAN
-    };
-    this.controls.noZoom = true;
   }
 
   setupLights() {
@@ -60,6 +56,9 @@ class App {
 
   setupUI() {
     this.canvasElem.addEventListener('click', (e) => {
+      if (this.animating) {
+        return;
+      }
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -75,17 +74,27 @@ class App {
       }
     });
     document.getElementById('clear').addEventListener('click', () => {
+      if (this.animating) {
+        return;
+      }
       this.clear();
+    });
+    document.getElementById('fly').addEventListener('click', () => {
+      if (this.animating) {
+        return;
+      }
+      this.fly();
     });
     this.raycaster = new THREE.Raycaster();
     this.points = [];
     this.splinePoints = [];
+    this.animating = false;
   }
 
   clear() {
     this.clearPoints();
     this.clearSplinePoints();
-    this.controls.reset();
+    this.resetCamera();
   }
 
   clearPoints() {
@@ -160,6 +169,46 @@ class App {
     });
   }
 
+  fly() {
+    if (this.splinePoints.length > 1) {
+      this.animating = true;
+      const tweens = [];
+      for (let i = 0; i < this.splinePoints.length - 1; i++) {
+        const fromPos = i > 0 ? this.splinePoints[i - 1].pos : this.camera.position;
+        fromPos.z += i > 0 ? 10 : 0;
+        const toPos = this.splinePoints[i].pos;
+        toPos.z += 10;
+        const lookAtPos = this.splinePoints[i + 1].pos;
+        lookAtPos.z += 10;
+        const tween = new TWEEN.Tween({
+            x: fromPos.x,
+            y: fromPos.y,
+            z: fromPos.z,
+          })
+          .to({
+            x: toPos.x,
+            y: toPos.y,
+            z: toPos.z,
+          })
+          .onUpdate((p) => {
+            console.log(p, lookAtPos);
+            this.camera.position.set(p.x, p.y, p.z);
+            this.camera.lookAt(lookAtPos);
+          });
+        if (i == this.splinePoints.length - 2) {
+          tween.onComplete(() => {
+            this.animating = false;
+          });
+        }
+        tweens.push(tween);
+      }
+      for (let i = 0; i < tweens.length - 1; i++) {
+        tweens[i].chain(tweens[i + 1]);
+      }
+      tweens[0].start();
+    }
+  }
+
   run() {
     this.animate();
   }
@@ -168,7 +217,7 @@ class App {
     requestAnimationFrame(() => {
       this.animate();
     });
-    this.controls.update();
+    TWEEN.update();
     this.renderer.render(this.scene, this.camera);
   }
 }
