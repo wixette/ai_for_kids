@@ -30,6 +30,12 @@ class App {
     this.camera.lookAt(0, 0, 0);
     this.controls = new TrackballControls(this.camera,
         this.renderer.domElement);
+    this.controls.mouseButtons = {
+      LEFT: THREE.MOUSE.DOLLY,
+      MIDDLE: THREE.MOUSE.ROTATE,
+      RIGHT: THREE.MOUSE.PAN
+    };
+    this.controls.noZoom = true;
   }
 
   setupLights() {
@@ -125,7 +131,7 @@ class App {
     var path = Smooth(p, {
       method: Smooth.METHOD_CUBIC,
       clip: Smooth.CLIP_PERIODIC,
-      cubicTension: Smooth.CUBIC_TENSION_CATMULL_ROM
+      cubicTension: Smooth.CUBIC_TENSION_CATMULL_ROM,
     });
     for (let t = 0; t < p.length - 1; t += 1) {
       const v0 = new THREE.Vector3(p[t][0], p[t][1], p[t][2]);
