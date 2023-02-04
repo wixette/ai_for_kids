@@ -23,14 +23,15 @@ class App {
   }
 
   setupCamera() {
-    this.camera = new THREE.PerspectiveCamera(30,
+    this.camera = new THREE.PerspectiveCamera(50,
       this.canvasElem.width / this.canvasElem.height,
       0.1, 1000);
     this.resetCamera();
   }
 
   resetCamera() {
-    this.camera.position.set(0, 0, 240);
+    this.camera.position.set(0, 0, 140);
+    this.camera.up.set(0, 1, 0);
     this.camera.lookAt(0, 0, 0);
   }
 
@@ -145,7 +146,7 @@ class App {
     for (let t = 0; t < p.length - 1; t += 1) {
       const v0 = new THREE.Vector3(p[t][0], p[t][1], p[t][2]);
       const v1 = new THREE.Vector3(p[t+1][0], p[t+1][1], p[t+1][2]);
-      const delta = 1 / v0.distanceTo(v1) * 3;
+      const delta = 1 / v0.distanceTo(v1) * 2;
       for (let ti = t; ti < t + 1; ti += delta) {
         const step = path(ti);
         const pos = new THREE.Vector3(step[0], step[1], step[2]);
@@ -170,42 +171,78 @@ class App {
   }
 
   fly() {
+    const ABOVE = 15;
+    const LOOK_AT_ABOVE = 13;
     if (this.splinePoints.length > 1) {
       this.animating = true;
-      const tweens = [];
-      for (let i = 0; i < this.splinePoints.length - 1; i++) {
-        const fromPos = i > 0 ? this.splinePoints[i - 1].pos : this.camera.position;
-        fromPos.z += i > 0 ? 10 : 0;
-        const toPos = this.splinePoints[i].pos;
-        toPos.z += 10;
-        const lookAtPos = this.splinePoints[i + 1].pos;
-        lookAtPos.z += 10;
-        const tween = new TWEEN.Tween({
-            x: fromPos.x,
-            y: fromPos.y,
-            z: fromPos.z,
+
+      const fromPos = this.camera.position.clone();
+      const toPos = this.splinePoints[0].pos.clone();
+      toPos.z += ABOVE;
+      this.camera.position.copy(toPos);
+
+      const lookAtPos = this.splinePoints[1].pos.clone();
+      lookAtPos.z += LOOK_AT_ABOVE;
+      const fromQuaternion = this.camera.quaternion.clone();
+
+      this.camera.up.set(0, 0, 1);
+      this.camera.lookAt(lookAtPos);
+      const toQuaternion = this.camera.quaternion.clone();
+      this.camera.position.copy(fromPos);
+      this.camera.quaternion.copy(fromQuaternion);
+
+      const moveCameraIn = new TWEEN.Tween(this.camera.position)
+          .to(toPos)
+          .easing(TWEEN.Easing.Quadratic.In);
+
+      const rotateCameraIn = new TWEEN.Tween(this.camera.quaternion)
+          .to(toQuaternion)
+          .easing(TWEEN.Easing.Linear.None)
+          .onUpdate((obj) => {
+            this.camera.quaternion.set(obj.x, obj.y, obj.z, obj.w);
+          });
+
+      const steps = this.splinePoints.length - 2;
+      const stepCamera = new TWEEN.Tween({
+            step: 0
           })
           .to({
-            x: toPos.x,
-            y: toPos.y,
-            z: toPos.z,
+            step: steps
+          }, steps * 30)
+          .easing((k) => {
+            return Math.floor(k * steps) / steps;
           })
-          .onUpdate((p) => {
-            console.log(p, lookAtPos);
-            this.camera.position.set(p.x, p.y, p.z);
+          .onUpdate((obj) => {
+            const i = Math.floor(obj.step);
+            const toPos = this.splinePoints[i].pos.clone();
+            toPos.z += ABOVE;
+            const lookAtPos = this.splinePoints[i+1].pos.clone();
+            lookAtPos.z += LOOK_AT_ABOVE;
+            this.camera.position.copy(toPos);
+            this.camera.up.set(0, 0, 1);
             this.camera.lookAt(lookAtPos);
           });
-        if (i == this.splinePoints.length - 2) {
-          tween.onComplete(() => {
-            this.animating = false;
+
+      const rotateCameraOut = new TWEEN.Tween(this.camera.quaternion)
+          .to(fromQuaternion)
+          .easing(TWEEN.Easing.Linear.None)
+          .onUpdate((obj) => {
+            this.camera.quaternion.set(obj.x, obj.y, obj.z, obj.w);
           });
-        }
-        tweens.push(tween);
-      }
-      for (let i = 0; i < tweens.length - 1; i++) {
-        tweens[i].chain(tweens[i + 1]);
-      }
-      tweens[0].start();
+
+      const moveCameraOut = new TWEEN.Tween(this.camera.position)
+          .to(fromPos)
+          .easing(TWEEN.Easing.Quadratic.Out)
+          .onComplete(() => {
+            this.resetCamera();
+            this.animating = false;
+          })
+
+      moveCameraIn.chain(rotateCameraIn);
+      rotateCameraIn.chain(stepCamera);
+      stepCamera.chain(rotateCameraOut);
+      rotateCameraOut.chain(moveCameraOut);
+      moveCameraIn.start();
     }
   }
 
