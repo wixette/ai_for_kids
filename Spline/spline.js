@@ -157,7 +157,7 @@ class App {
     }
     var path = Smooth(p, {
       method: Smooth.METHOD_CUBIC,
-      clip: Smooth.CLIP_PERIODIC,
+      clip: Smooth.CLIP_CLAMP,
       cubicTension: Smooth.CUBIC_TENSION_CATMULL_ROM,
     });
     for (let t = 0; t < p.length - 1; t += 1) {

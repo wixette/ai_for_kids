@@ -10,9 +10,7 @@
   "scripts": {
     "start": "http-server -c-1 ."
   },
-  "dependencies": {
-    "three": "^0.149.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "http-server": "^14.1.1"
   }
