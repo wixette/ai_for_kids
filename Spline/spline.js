@@ -19,6 +19,8 @@ class App {
       antialias: true,
       canvas: this.canvasElem,
     });
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setSize(this.canvasElem.width, this.canvasElem.height);
   }
 
@@ -36,12 +38,21 @@ class App {
   }
 
   setupLights() {
-    const light1 = new THREE.AmbientLight(0xeeeeee);
+    const light1 = new THREE.AmbientLight(0xffffff, 1.0);
     this.scene.add(light1);
 
-    const light2 = new THREE.DirectionalLight(0xffffff, .7);
-    light2.position.set(-5, 5, 10);
+    const light2 = new THREE.PointLight(0xffffff, 1, 200);
+    light2.position.set(50, 80, 100);
+    light2.castShadow = true;
+    light2.shadow.mapSize.width = 512;
+    light2.shadow.mapSize.height = 512;
+    light2.shadow.radius = 3;
+    light2.shadow.blurSamples = 10;
     this.scene.add(light2);
+
+    const light3 = new THREE.DirectionalLight(0xffffff, 0.3);
+    light3.position.set(50, 80, 100);
+    this.scene.add(light3);
   }
 
   setupObjects() {
@@ -52,6 +63,8 @@ class App {
       side: THREE.DoubleSide,
     });
     this.ground = new THREE.Mesh(geometry, material);
+    this.ground.castShadow = false;
+    this.ground.receiveShadow = true;
     this.scene.add(this.ground);
   }
 
@@ -118,9 +131,11 @@ class App {
     const geometry = new THREE.SphereGeometry(3);
     const material = new THREE.MeshStandardMaterial({
       color: 0xff9900,
-      roughness: 0.9,
+      roughness: 0.3,
     });
     const ball = new THREE.Mesh(geometry, material);
+    ball.castShadow = true;
+    ball.receiveShadow = false;
     pos.z = 3;
     ball.position.copy(pos);
     this.scene.add(ball);
@@ -170,10 +185,12 @@ class App {
   addSplinePoint(pos) {
     const geometry = new THREE.SphereGeometry(1);
     const material = new THREE.MeshStandardMaterial({
-      color: 0xff3300,
-      roughness: 0.9,
+      color: 0xff4400,
+      roughness: 0.3,
     });
     const ball = new THREE.Mesh(geometry, material);
+    ball.castShadow = true;
+    ball.receiveShadow = false;
     ball.position.copy(pos);
     this.scene.add(ball);
     this.splinePoints.push({
