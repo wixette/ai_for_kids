@@ -89,6 +89,7 @@ class App {
     this.raycaster = new THREE.Raycaster();
     this.points = [];
     this.splinePoints = [];
+    this.splineFlyPoints = [];
     this.animating = false;
   }
 
@@ -110,6 +111,7 @@ class App {
       this.scene.remove(point.obj);
     }
     this.splinePoints = [];
+    this.splineFlyPoints = [];
   }
 
   addPoint(pos) {
@@ -146,13 +148,23 @@ class App {
     for (let t = 0; t < p.length - 1; t += 1) {
       const v0 = new THREE.Vector3(p[t][0], p[t][1], p[t][2]);
       const v1 = new THREE.Vector3(p[t+1][0], p[t+1][1], p[t+1][2]);
-      const delta = 1 / v0.distanceTo(v1) * 2;
+      const delta = 0.6 / v0.distanceTo(v1);
+      let stepCount = 0;
       for (let ti = t; ti < t + 1; ti += delta) {
         const step = path(ti);
         const pos = new THREE.Vector3(step[0], step[1], step[2]);
-        this.addSplinePoint(pos);
+        this.addSplineFlyPoint(pos);
+        if (stepCount++ % 6 == 0) {
+          this.addSplinePoint(pos);
+        }
       }
     }
+  }
+
+  addSplineFlyPoint(pos) {
+    this.splineFlyPoints.push({
+      pos: pos,
+    });
   }
 
   addSplinePoint(pos) {
@@ -172,16 +184,20 @@ class App {
 
   fly() {
     const ABOVE = 15;
-    const LOOK_AT_ABOVE = 13;
-    if (this.splinePoints.length > 1) {
+    const LOOK_AT_ABOVE = 12;
+    const LOOK_AHEAD_NUM = 5;
+
+    if (this.splineFlyPoints.length > 1) {
       this.animating = true;
 
       const fromPos = this.camera.position.clone();
-      const toPos = this.splinePoints[0].pos.clone();
+      const toPos = this.splineFlyPoints[0].pos.clone();
       toPos.z += ABOVE;
       this.camera.position.copy(toPos);
 
-      const lookAtPos = this.splinePoints[1].pos.clone();
+      const lookAtIndex =
+          Math.min(LOOK_AHEAD_NUM, this.splineFlyPoints.length - 1);
+      const lookAtPos = this.splineFlyPoints[lookAtIndex].pos.clone();
       lookAtPos.z += LOOK_AT_ABOVE;
       const fromQuaternion = this.camera.quaternion.clone();
 
@@ -202,7 +218,9 @@ class App {
             this.camera.quaternion.set(obj.x, obj.y, obj.z, obj.w);
           });
 
-      const steps = this.splinePoints.length - 2;
+      const steps =
+          Math.min(this.splineFlyPoints.length - LOOK_AHEAD_NUM,
+              this.splineFlyPoints.length - 1);
       const stepCamera = new TWEEN.Tween({
             step: 0
           })
@@ -214,9 +232,11 @@ class App {
           })
           .onUpdate((obj) => {
             const i = Math.floor(obj.step);
-            const toPos = this.splinePoints[i].pos.clone();
+            const toPos = this.splineFlyPoints[i].pos.clone();
             toPos.z += ABOVE;
-            const lookAtPos = this.splinePoints[i+1].pos.clone();
+            const lookAtIndex =
+                Math.min(i + LOOK_AHEAD_NUM, this.splineFlyPoints.length - 1);
+            const lookAtPos = this.splineFlyPoints[lookAtIndex].pos.clone();
             lookAtPos.z += LOOK_AT_ABOVE;
             this.camera.position.copy(toPos);
             this.camera.up.set(0, 0, 1);
