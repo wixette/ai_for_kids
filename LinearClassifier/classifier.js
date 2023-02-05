@@ -117,6 +117,7 @@ class App {
   }
 
   clear() {
+    document.getElementById('type0').checked = true;
     this.clearPoints();
     this.clearLinePoints();
   }
@@ -167,12 +168,33 @@ class App {
     }
     const svm = new SVM();
     svm.train(data, labels, {C: 1.0});
-    const lineFunc = (x) => {
-      return - (svm.w[0]/svm.w[1]) * x - svm.b / svm.w[1];
+
+    if (svm.w[1] === 0) {
+      window.alert('No decision boundary is found.');
+      return;
+    }
+    const w = - svm.w[0]/svm.w[1];
+    const b = - svm.b / svm.w[1];
+    const lineFuncXToY = (x) => {
+      return w * x + b;
     };
-    for (let plotX = 0; plotX < GROUND_WIDTH; plotX += 2) {
-      const plotY = lineFunc(plotX);
-      this.addLinePoint(plotX, plotY);
+    const lineFuncYToX = (y) => {
+      return (y - b) / w;
+    };
+    if (w >= -1 && w <= 1) {
+      for (let plotX = 0; plotX < GROUND_WIDTH; plotX += 1.5) {
+        const plotY = lineFuncXToY(plotX);
+        if (plotY >= 0 && plotY < GROUND_HEIGHT) {
+          this.addLinePoint(plotX, plotY);
+        }
+      }
+    } else {
+      for (let plotY = 0; plotY < GROUND_HEIGHT; plotY += 2) {
+        const plotX = lineFuncYToX(plotY);
+        if (plotX >= 0 && plotX < GROUND_WIDTH) {
+          this.addLinePoint(plotX, plotY);
+        }
+      }
     }
   }
 
