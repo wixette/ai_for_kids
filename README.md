@@ -8,6 +8,13 @@ A unity app to demonstrate randomness with dices.
 
 ![Dices](screenshots/Dices.jpg)
 
+## GaltonBoard
+
+A unity app that drop balls into a [Galton
+board](https://en.wikipedia.org/wiki/Galton_board).
+
+![GaltonBoard](screenshots/GaltonBoard.png)
+
 ## LinearClassifier
 
 A three.js app to draw a straight boundary line (the decision boundary) to
