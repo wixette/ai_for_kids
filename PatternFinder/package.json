@@ -1,0 +1,17 @@
+{
+  "name": "pattern-finder",
+  "version": "0.0.1",
+  "description": "Find simple patterns in a cube grid.",
+  "main": "patterns.js",
+  "repository": "https://github.com/wixette/ai_for_kids",
+  "author": "wixette",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "start": "http-server -c-1 ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
